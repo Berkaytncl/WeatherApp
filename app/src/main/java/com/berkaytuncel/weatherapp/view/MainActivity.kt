@@ -30,22 +30,42 @@ class MainActivity : AppCompatActivity() {
         val cName = GET.getString("cityName", "ankara")
         edt_city_name.setText(cName)
 
-        viewModel.refreshData()
+        viewModel.refreshData(cName!!)
 
         getLiveData()
+
+        swipe_refresh_layout.setOnRefreshListener {
+            ll_data.visibility = View.GONE
+            tv_error.visibility = View.GONE
+            pb_loading.visibility = View.GONE
+
+            val cityName = GET.getString("cityName", cName)
+            edt_city_name.setText(cityName)
+            viewModel.refreshData(cityName!!)
+            swipe_refresh_layout.isRefreshing = false
+        }
+
+        img_search_city_name.setOnClickListener {
+            val cityName = edt_city_name.text.toString()
+            SET.putString("cityName", cityName)
+            SET.commit()
+            viewModel.refreshData(cityName)
+            getLiveData()
+        }
     }
 
     private fun getLiveData() {
         viewModel.weatherData.observe(this, Observer { data ->
             data?.let {
                 ll_data.visibility = View.VISIBLE
+                pb_loading.visibility = View.GONE
 
-                tv_degree.text = data.main.temp.toString()
+                tv_degree.text = data.main.temp.toString() + "°C"
 
                 tv_country_code.text = data.sys.country
                 tv_city_name.text = data.name
 
-                tv_humidity.text = data.main.humidity.toString()
+                tv_humidity.text = data.main.humidity.toString() + "%"
                 tv_speed.text = data.wind.speed.toString()
                 tv_lat.text = data.coord.lat.toString()
                 tv_lon.text = data.coord.lon.toString()
